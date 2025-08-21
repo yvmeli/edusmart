@@ -1,0 +1,23 @@
+[
+  {
+    "student_id": "maría_lópez__2do",
+    "correct": 2,
+    "final_level": 2,
+    "duration_seconds": 180,
+    "created_at": "2025-08-21T15:28:51.873931Z"
+  },
+  {
+    "student_id": "maría_lópez__2do",
+    "correct": 3,
+    "final_level": 2,
+    "duration_seconds": 180,
+    "created_at": "2025-08-21T15:28:51.893780Z"
+  },
+  {
+    "student_id": "maría_lópez__2do",
+    "correct": 4,
+    "final_level": 2,
+    "duration_seconds": 180,
+    "created_at": "2025-08-21T15:28:51.915653Z"
+  }
+]

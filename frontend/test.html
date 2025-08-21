@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Test Adaptativo - EduSmart</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Test Adaptativo</h2>
+      <a class="btn btn-ghost" href="menu.html">Volver al Dashboard</a>
+    </div>
+
+    <div class="test-panel fade-in">
+      <div class="test-status" id="status">Pregunta 1/5 • Nivel 2</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress" style="width:20%"></div></div>
+      <div class="test-question" id="question">Cargando pregunta…</div>
+      <div class="test-options" id="options"></div>
+
+      <div class="mt-16" style="color:var(--text-secondary);font-size:14px;">
+        <div>Tiempo: <span id="timer">00:00</span></div>
+        <div class="mt-16">
+          <span class="badge success">Correctas: <span id="correct-count">0</span></span>
+          <span class="badge primary" style="margin-left:8px;">Nivel: <span id="current-level">2</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    let nivel = 2, paso = 1, correctas = 0;
+    let startTime = Date.now(), timerInterval;
+
+    function updateTimer(){
+      const s = Math.floor((Date.now()-startTime)/1000);
+      const m = Math.floor(s/60), r = s%60;
+      document.getElementById('timer').textContent = `${m.toString().padStart(2,'0')}:${r.toString().padStart(2,'0')}`;
+    }
+    function startTimer(){ startTime = Date.now(); timerInterval = setInterval(updateTimer,1000); }
+    function stopTimer(){ if (timerInterval) clearInterval(timerInterval); }
+
+    async function loadPregunta(){
+      const data = await api(`/api/pregunta?nivel=${nivel}`);
+      document.getElementById('status').textContent = `Pregunta ${paso}/5 • Nivel ${nivel}`;
+      document.getElementById('question').textContent = data.text;
+      document.getElementById('progress').style.width = `${(paso/5)*100}%`;
+      document.getElementById('correct-count').textContent = correctas;
+      document.getElementById('current-level').textContent = nivel;
+
+      const cont = document.getElementById('options'); cont.innerHTML = '';
+      data.options.forEach((op, i) => {
+        const b = document.createElement('button');
+        b.className = 'test-option';
+        b.textContent = `${String.fromCharCode(65+i)}. ${op}`;
+        b.onclick = () => elegir(i, data.answer_index);
+        cont.appendChild(b);
+      });
+    }
+
+    async function elegir(sel, correctIndex){
+      const buttons = document.querySelectorAll('.test-option');
+      const ok = sel === correctIndex;
+      buttons.forEach((btn,i) => {
+        btn.disabled = true;
+        if (i === correctIndex) { btn.style.borderColor='var(--success-color)'; btn.style.background='rgba(5,150,105,.1)'; }
+        else if (i === sel && !ok) { btn.style.borderColor='var(--danger-color)'; btn.style.background='rgba(220,38,38,.1)'; }
+      });
+      if (ok) { correctas += 1; nivel = Math.min(3, nivel+1); } else { nivel = Math.max(1, nivel-1); }
+      await new Promise(r => setTimeout(r, 1500));
+      paso += 1;
+      if (paso > 5) finalizarTest(); else loadPregunta();
+    }
+
+    async function finalizarTest(){
+      stopTimer();
+      const total = Math.floor((Date.now()-startTime)/1000);
+      const student = getStudent();
+      const result = await api('/api/test-result', {
+        method:'POST', body:{ student_id:student.id, correct:correctas, final_level:nivel, duration_seconds:total }
+      });
+      const panel = document.querySelector('.test-panel');
+      panel.innerHTML = `
+        <div class="test-status" style="background:rgba(5,150,105,.1);color:var(--success-color);">Test Completado</div>
+        <div class="center" style="margin:32px 0;">
+          <div class="stats-value" style="color:var(--success-color);margin-bottom:16px;">${correctas}/5</div>
+          <p class="stats-subtitle">Respuestas correctas</p>
+        </div>
+        <div class="dashboard-grid" style="margin:32px 0;">
+          <div class="stats-card"><div class="stats-value" style="font-size:24px;">${nivel}</div><p class="stats-subtitle">Nivel final</p></div>
+          <div class="stats-card"><div class="stats-value" style="font-size:24px;">+${result.awarded}</div><p class="stats-subtitle">Puntos obtenidos</p></div>
+          <div class="stats-card"><div class="stats-value" style="font-size:24px;">${Math.floor(total/60)}:${(total%60).toString().padStart(2,'0')}</div><p class="stats-subtitle">Tiempo total</p></div>
+        </div>
+        ${result.breakdown ? `
+          <div style="margin:24px 0;padding:20px;background:var(--surface-secondary);border-radius:12px;">
+            <h4 style="margin:0 0 12px;color:var(--text-primary);">Desglose de puntos</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;font-size:14px;">
+              <div>Base: +${result.breakdown.base}</div>
+              <div>Precisión: +${result.breakdown.accuracy}</div>
+              <div>Velocidad: +${result.breakdown.speed}</div>
+              <div>Nivel: +${result.breakdown.level}</div>
+            </div>
+          </div>` : '' }
+        <div style="display:flex;gap:12px;margin-top:32px;">
+          <button class="btn btn-primary" onclick="window.location.reload()" style="flex:1;">Repetir test</button>
+          <a class="btn btn-secondary" href="menu.html" style="flex:1;">Ver dashboard</a>
+        </div>`;
+    }
+
+    startTimer(); loadPregunta();
+  </script>
+</body>
+</html>

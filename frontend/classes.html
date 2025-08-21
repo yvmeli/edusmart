@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Video Clases - EduSmart</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Video Clases</h2>
+      <a class="btn btn-ghost" href="menu.html">Volver al Dashboard</a>
+    </div>
+
+    <div class="stats-card fade-in mb-24">
+      <div class="stats-header">
+        <div class="stats-icon primary">MAT</div>
+        <div><h3 class="stats-title">Selecciona una materia</h3></div>
+      </div>
+      <div id="materias" class="chips"></div>
+    </div>
+
+    <div id="videos-section" style="display:none;">
+      <div class="stats-card fade-in">
+        <div class="stats-header">
+          <div class="stats-icon success">VID</div>
+          <div><h3 class="stats-title" id="current-subject">Videos disponibles</h3></div>
+        </div>
+        <div id="videos-stats" class="mt-16"></div>
+      </div>
+      <div id="videos" class="list"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    let currentMateria = null;
+    let student = null;
+
+    (async function loadMaterias(){
+      student = getStudent();
+      const materias = await api('/api/materias');
+      const container = document.getElementById('materias');
+      container.innerHTML = '';
+      if (materias.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-secondary);">No hay materias disponibles</p>';
+        return;
+      }
+      materias.forEach(m => {
+        const b = document.createElement('button');
+        b.className = 'chip';
+        b.textContent = m;
+        b.onclick = () => selectMateria(m);
+        container.appendChild(b);
+      });
+      if (materias[0]) selectMateria(materias[0]);
+    })();
+
+    async function selectMateria(materia) {
+      currentMateria = materia;
+      document.querySelectorAll('.chip').forEach(ch => ch.classList.toggle('active', ch.textContent === materia));
+      document.getElementById('current-subject').textContent = `Videos de ${materia}`;
+
+      const videos = await api(`/api/videos?materia=${encodeURIComponent(materia)}&student_id=${encodeURIComponent(student.id)}`);
+      document.getElementById('videos-section').style.display = 'block';
+
+      const completed = videos.filter(v => v.completed).length;
+      const total = videos.length;
+      document.getElementById('videos-stats').innerHTML = `
+        <div style="display:flex;gap:24px;align-items:center;">
+          <div class="badge ${completed===total?'success':'primary'}">${completed}/${total} completados</div>
+          <div class="progress-bar" style="flex:1;margin:0;">
+            <div class="progress-fill" style="width:${total>0?(completed/total)*100:0}%"></div>
+          </div>
+        </div>`;
+
+      const list = document.getElementById('videos');
+      list.innerHTML = '';
+      if (videos.length === 0) {
+        list.innerHTML = `<div class="video-card"><p style="text-align:center;color:var(--text-secondary);margin:40px 0;">No hay videos disponibles para ${materia}</p></div>`;
+        return;
+      }
+
+      videos.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'video-card fade-in';
+        card.innerHTML = `
+          ${v.completed ? '<div class="completed-badge">Completado</div>' : ''}
+          <h3>${v.title}</h3>
+          <p>${v.description} • ${v.duration}</p>
+          <iframe width="100%" height="215" src="${v.url}" frameborder="0" allowfullscreen></iframe>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <button class="btn ${v.completed ? 'btn-secondary' : 'btn-primary'}" onclick="markVideoComplete('${v.id}', this)" ${v.completed?'disabled':''}>
+              ${v.completed ? 'Ya completado' : 'Marcar como visto'}
+            </button>
+            ${v.completed ? '' : '<span style="font-size:12px;color:var(--text-secondary);">+10-20 puntos</span>'}
+          </div>`;
+        list.appendChild(card);
+      });
+    }
+
+    async function markVideoComplete(id, btn) {
+      btn.disabled = true; btn.textContent = 'Procesando...';
+      try {
+        const result = await api('/api/video-completo', { method:'POST', body:{ student_id: student.id, video_id: id }});
+        if (result.awarded > 0) {
+          btn.textContent = 'Ya completado'; btn.className = 'btn btn-secondary';
+          const card = btn.closest('.video-card');
+          if (!card.querySelector('.completed-badge')) {
+            const b = document.createElement('div');
+            b.className = 'completed-badge'; b.textContent = 'Completado';
+            card.insertBefore(b, card.firstChild);
+          }
+          const hint = btn.nextElementSibling; if (hint) hint.remove();
+          showNotification(`+${result.awarded} puntos obtenidos`, 'success');
+          selectMateria(currentMateria);
+        } else {
+          btn.textContent = 'Ya completado';
+        }
+      } catch {
+        btn.disabled = false; btn.textContent = 'Marcar como visto';
+        showNotification('Error al marcar el video como completado', 'error');
+      }
+    }
+  </script>
+</body>
+</html>

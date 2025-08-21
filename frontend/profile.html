@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Perfil - EduSmart</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Perfil</h2>
+      <a class="btn btn-ghost" href="menu.html">Volver al Dashboard</a>
+    </div>
+
+    <!-- Info del usuario -->
+    <div class="stats-card fade-in mb-24">
+      <div class="stats-header">
+        <div class="stats-icon primary">PER</div>
+        <div><h3 class="stats-title">Datos del estudiante</h3></div>
+      </div>
+
+      <div class="card-content" style="padding-top:0;">
+        <div style="display:flex; gap:16px; align-items:center;">
+          <div class="user-avatar" id="p-avatar">U</div>
+          <div>
+            <h3 id="p-name" style="margin:0;">—</h3>
+            <p class="stats-subtitle" style="margin-top:4px;">Curso: <span id="p-course">—</span></p>
+          </div>
+        </div>
+
+        <div class="list" style="margin-top:16px;">
+          <div class="list-item" style="display:flex; justify-content:space-between;">
+            <span class="stats-subtitle" style="font-size:13px;">Usuario</span>
+            <strong id="p-username">—</strong>
+          </div>
+          <div class="list-item" style="display:flex; justify-content:space-between;">
+            <span class="stats-subtitle" style="font-size:13px;">ID</span>
+            <code id="p-id" style="opacity:.8;">—</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones de sesión -->
+    <div class="stats-card fade-in">
+      <div class="stats-header">
+        <div class="stats-icon warning">SEC</div>
+        <div><h3 class="stats-title">Sesión</h3></div>
+      </div>
+      <div class="card-content" style="display:flex; gap:12px; flex-wrap:wrap; padding-top:0;">
+        <button class="btn btn-primary" onclick="logout()">Cerrar sesión</button>
+        <button class="btn btn-secondary" onclick="hardReset()">Borrar datos del dispositivo</button>
+      </div>
+      <p class="stats-subtitle" style="padding: 0 24px 16px; margin:0;">
+        “Borrar datos” limpia el almacenamiento local.
+      </p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Cargar datos del estudiante
+    (function loadProfile(){
+      const s = getStudent();
+      document.getElementById('p-name').textContent = s.name || '—';
+      document.getElementById('p-course').textContent = s.course || '—';
+      document.getElementById('p-username').textContent = s.username || '—';
+      document.getElementById('p-id').textContent = s.id || '—';
+      document.getElementById('p-avatar').textContent = (s.name || 'U').charAt(0).toUpperCase();
+    })();
+  </script>
+</body>
+</html>

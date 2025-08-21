@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Recompensas - EduSmart</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Recompensas y Progreso</h2>
+      <a class="btn btn-ghost" href="menu.html">Volver al Dashboard</a>
+    </div>
+
+    <div class="stats-card fade-in center" style="margin-bottom:32px;">
+      <div class="stats-header" style="justify-content:center;">
+        <div class="stats-icon primary">PTS</div>
+        <div><h3 class="stats-title">Puntos totales</h3></div>
+      </div>
+      <div class="stats-value" id="total-points" style="font-size:48px;color:var(--primary-color);">0</div>
+      <p class="stats-subtitle">Puntos acumulados en total</p>
+    </div>
+
+    <div class="dashboard-grid" style="margin-bottom:32px;">
+      <div class="stats-card fade-in">
+        <div class="stats-header">
+          <div class="stats-icon success">TST</div>
+          <div><h3 class="stats-title">Tests</h3></div>
+        </div>
+        <div class="stats-value" id="test-points">0</div>
+        <p class="stats-subtitle" id="test-count">0 tests realizados</p>
+      </div>
+
+      <div class="stats-card fade-in">
+        <div class="stats-header">
+          <div class="stats-icon warning">VID</div>
+          <div><h3 class="stats-title">Videos</h3></div>
+        </div>
+        <div class="stats-value" id="video-points">0</div>
+        <p class="stats-subtitle" id="video-count">0 videos vistos</p>
+      </div>
+    </div>
+
+    <div class="stats-card fade-in">
+      <div class="stats-header">
+        <div class="stats-icon primary">HST</div>
+        <div><h3 class="stats-title">Historial detallado</h3></div>
+      </div>
+
+      <div style="margin:20px 0;">
+        <div class="chips">
+          <button class="chip active" onclick="filterRewards('all', event)">Todos</button>
+          <button class="chip" onclick="filterRewards('test', event)">Tests</button>
+          <button class="chip" onclick="filterRewards('video', event)">Videos</button>
+        </div>
+      </div>
+
+      <div id="rewards-list" class="list">
+        <div class="activity-item" style="justify-content:center;color:var(--text-secondary);">
+          <p>No hay recompensas aún</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    let allRewards = [], currentFilter = 'all';
+
+    (async function loadRewards(){
+      const student = getStudent();
+      const data = await api(`/api/rewards?student_id=${encodeURIComponent(student.id)}`);
+      allRewards = data.items;
+
+      document.getElementById('total-points').textContent = data.total.toLocaleString();
+      const s = data.summary || {};
+      const t = s.test  || { count:0, points:0 };
+      const v = s.video || { count:0, points:0 };
+      document.getElementById('test-points').textContent  = t.points.toLocaleString();
+      document.getElementById('test-count').textContent   = `${t.count} tests realizados`;
+      document.getElementById('video-points').textContent = v.points.toLocaleString();
+      document.getElementById('video-count').textContent  = `${v.count} videos vistos`;
+
+      renderRewards();
+    })();
+
+    function filterRewards(type, ev){
+      currentFilter = type;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      ev?.target?.classList.add('active');
+      renderRewards();
+    }
+
+    function renderRewards(){
+      const container = document.getElementById('rewards-list');
+      container.innerHTML = '';
+
+      let filtered = currentFilter === 'all' ? allRewards : allRewards.filter(r => r.type === currentFilter);
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="activity-item" style="justify-content:center;color:var(--text-secondary);"><p>No hay recompensas ${currentFilter==='all'?'':'de este tipo'} aún</p></div>`;
+        return;
+      }
+
+      const grouped = {};
+      filtered.forEach(r => {
+        const d = new Date(r.created_at).toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' });
+        (grouped[d] ||= []).push(r);
+      });
+
+      Object.keys(grouped).forEach(date => {
+        const head = document.createElement('div');
+        head.style.cssText = 'font-weight:600;color:var(--text-primary);margin:24px 0 12px;padding:8px 0;border-bottom:1px solid var(--border-color);';
+        head.textContent = date;
+        container.appendChild(head);
+
+        grouped[date].forEach(reward => {
+          const el = document.createElement('div');
+          el.className = 'activity-item fade-in';
+          const icon = reward.type === 'test' ? 'TST' : 'VID';
+          const iconClass = reward.type === 'test' ? 'primary' : 'success';
+          const time = new Date(reward.created_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+
+          let reason = reward.reason;
+          if (reward.type === 'test') {
+            const m = reward.reason.match(/Test completado \((\d+)\/5\) nivel final (\d+)/);
+            if (m) reason = `Test completado: ${m[1]}/5 correctas (Nivel ${m[2]})`;
+          } else if (reward.type === 'video') {
+            reason = reward.reason.replace('Video completado: ', 'Video visto: ');
+          }
+
+          el.innerHTML = `
+            <div class="activity-icon ${iconClass}">${icon}</div>
+            <div class="activity-content">
+              <p class="activity-title">${reason}</p>
+              <p class="activity-subtitle">${time}</p>
+            </div>
+            <div class="activity-points">+${reward.points}</div>`;
+          container.appendChild(el);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

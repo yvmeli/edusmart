@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Dashboard - EduSmart</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">ES</div>
+        EduSmart Dashboard
+      </div>
+
+      <!-- AHORA ES UN LINK -->
+      <a href="profile.html" class="user-info" aria-label="Abrir perfil">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <div>
+          <div id="user-name" style="font-weight:600;font-size:14px;">Usuario</div>
+          <div id="user-course" style="font-size:12px;color:var(--text-secondary);">Curso</div>
+        </div>
+      </a>
+    </div>
+
+
+    <div class="dashboard-grid">
+      <div class="stats-card fade-in">
+        <div class="stats-header">
+          <div class="stats-icon primary">PTS</div>
+          <div><h3 class="stats-title">Puntos totales</h3></div>
+        </div>
+        <div class="stats-value" id="total-points">0</div>
+        <p class="stats-subtitle">Puntos acumulados</p>
+      </div>
+
+      <div class="stats-card fade-in">
+        <div class="stats-header">
+          <div class="stats-icon success">TST</div>
+          <div><h3 class="stats-title">Tests completados</h3></div>
+        </div>
+        <div class="stats-value" id="tests-completed">0</div>
+        <p class="stats-subtitle" id="avg-score">Promedio: 0.0/5</p>
+      </div>
+
+      <div class="stats-card fade-in">
+        <div class="stats-header">
+          <div class="stats-icon warning">VID</div>
+          <div><h3 class="stats-title">Videos vistos</h3></div>
+        </div>
+        <div class="stats-value" id="videos-watched">0</div>
+        <p class="stats-subtitle">Videos completados</p>
+      </div>
+    </div>
+
+    <div class="stats-card fade-in" style="margin-bottom:32px;">
+      <div class="stats-header">
+        <div class="stats-icon primary">ACT</div>
+        <div><h3 class="stats-title">Actividad reciente</h3></div>
+      </div>
+      <div id="recent-activity">
+        <p style="color:var(--text-secondary);text-align:center;margin:20px 0;">No hay actividad reciente</p>
+      </div>
+    </div>
+
+    <!-- Navegación -->
+    <div class="nav-grid">
+      <a class="nav-card fade-in" href="classes.html">
+        <div class="nav-card-icon">VID</div>
+        <h3 class="nav-card-title">Video clases</h3>
+        <p class="nav-card-description">Explora contenido educativo organizado por materias</p>
+      </a>
+
+      <a class="nav-card fade-in" href="test.html">
+        <div class="nav-card-icon">TST</div>
+        <h3 class="nav-card-title">Test adaptativo</h3>
+        <p class="nav-card-description">Evalúa tu conocimiento con preguntas personalizadas</p>
+      </a>
+
+      <a class="nav-card fade-in" href="rewards.html">
+        <div class="nav-card-icon">REW</div>
+        <h3 class="nav-card-title">Recompensas</h3>
+        <p class="nav-card-description">Revisa tu progreso y puntos obtenidos</p>
+      </a>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    (async function loadDashboard(){
+      const student = getStudent();
+      document.getElementById('user-name').textContent = student.name;
+      document.getElementById('user-course').textContent = `Curso: ${student.course}`;
+      document.getElementById('user-avatar').textContent = student.name.charAt(0).toUpperCase();
+
+      const stats = await api(`/api/student-stats/${encodeURIComponent(student.id)}`);
+      document.getElementById('total-points').textContent = stats.stats.total_points.toLocaleString();
+      document.getElementById('tests-completed').textContent = stats.stats.tests_completed;
+      document.getElementById('videos-watched').textContent = stats.stats.videos_watched;
+      document.getElementById('avg-score').textContent = `Promedio: ${stats.stats.avg_score.toFixed(1)}/5`;
+
+      const cont = document.getElementById('recent-activity'); cont.innerHTML = '';
+      if (stats.recent_activity.length === 0) {
+        cont.innerHTML = '<p style="color:var(--text-secondary);text-align:center;margin:20px 0;">No hay actividad reciente</p>';
+      } else {
+        stats.recent_activity.forEach(a => {
+          const item = document.createElement('div');
+          item.className = 'activity-item';
+          const iconClass = a.type === 'test' ? 'primary' : 'success';
+          const date = new Date(a.date).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+          item.innerHTML = `
+            <div class="activity-icon ${iconClass}">${a.type==='test'?'TST':'VID'}</div>
+            <div class="activity-content">
+              <p class="activity-title">${a.description}</p>
+              <p class="activity-subtitle">${date}</p>
+            </div>
+            <div class="activity-points">+${a.points}</div>`;
+          cont.appendChild(item);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

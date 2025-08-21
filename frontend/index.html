@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>EduSmart - Acceso</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="form-container">
+      <div class="form-header">
+        <div class="logo">
+          <div class="logo-icon">ES</div>
+          EduSmart
+        </div>
+        <h1 class="form-title">Acceso</h1>
+        <p class="form-subtitle">Inicia sesión o crea tu cuenta</p>
+      </div>
+
+      <div class="chips" style="margin-top:0;">
+        <button id="tab-login" class="chip active">Ingresar</button>
+        <button id="tab-register" class="chip">Crear cuenta</button>
+      </div>
+
+      <!-- LOGIN -->
+      <form id="form-login" style="margin-top:12px;">
+        <div class="form-group">
+          <label class="form-label" for="li-username">Usuario</label>
+          <input id="li-username" class="form-input" required placeholder="tu_usuario"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="li-password">Contraseña</label>
+          <input id="li-password" type="password" class="form-input" required placeholder="••••••••"/>
+        </div>
+        <button class="btn btn-primary btn-full btn-lg" type="submit">Iniciar sesión</button>
+      </form>
+
+      <!-- REGISTER -->
+      <form id="form-register" style="display:none; margin-top:12px;">
+        <div class="form-group">
+          <label class="form-label" for="re-name">Nombre completo</label>
+          <input id="re-name" class="form-input" required placeholder="Nombre y apellido"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="re-course">Curso</label>
+          <select id="re-course" class="form-select" required>
+            <option value="">Selecciona tu curso</option>
+            <option value="1ro">1ro</option>
+            <option value="2do">2do</option>
+            <option value="3ro">3ro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="re-username">Usuario</label>
+          <input id="re-username" class="form-input" required placeholder="tu_usuario"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="re-password">Contraseña</label>
+          <input id="re-password" type="password" class="form-input" required minlength="4" placeholder="Mínimo 4 caracteres"/>
+        </div>
+        <button class="btn btn-primary btn-full btn-lg" type="submit">Crear cuenta</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Si ya hay sesión → dashboard
+    if (localStorage.getItem('student')) location.href = 'menu.html';
+
+    const $login = document.getElementById('form-login');
+    const $register = document.getElementById('form-register');
+    const $tabLogin = document.getElementById('tab-login');
+    const $tabRegister = document.getElementById('tab-register');
+
+    $tabLogin.onclick = () => {
+      $tabLogin.classList.add('active'); $tabRegister.classList.remove('active');
+      $login.style.display = ''; $register.style.display = 'none';
+    };
+    $tabRegister.onclick = () => {
+      $tabRegister.classList.add('active'); $tabLogin.classList.remove('active');
+      $register.style.display = ''; $login.style.display = 'none';
+    };
+
+    $login.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await authLogin({
+        username: document.getElementById('li-username').value.trim(),
+        password: document.getElementById('li-password').value
+      });
+    });
+
+    $register.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await authRegister({
+        name: document.getElementById('re-name').value.trim(),
+        course: document.getElementById('re-course').value,
+        username: document.getElementById('re-username').value.trim(),
+        password: document.getElementById('re-password').value
+      });
+    });
+  </script>
+</body>
+</html>

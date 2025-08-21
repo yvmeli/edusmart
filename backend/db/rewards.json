@@ -1,0 +1,39 @@
+[
+  {
+    "student_id": "maría_lópez__2do",
+    "type": "video",
+    "video_id": "test_vid_1",
+    "points": 10,
+    "reason": "Video completado: Test Video Math",
+    "created_at": "2025-08-21T15:28:51.843664Z"
+  },
+  {
+    "student_id": "maría_lópez__2do",
+    "type": "video",
+    "video_id": "test_vid_2",
+    "points": 20,
+    "reason": "Video completado: Test Video Lang",
+    "created_at": "2025-08-21T15:28:51.869936Z"
+  },
+  {
+    "student_id": "maría_lópez__2do",
+    "type": "test",
+    "points": 43,
+    "reason": "Test completado (2/5) nivel final 2 en 3m 0s",
+    "created_at": "2025-08-21T15:28:51.883487Z"
+  },
+  {
+    "student_id": "maría_lópez__2do",
+    "type": "test",
+    "points": 51,
+    "reason": "Test completado (3/5) nivel final 2 en 3m 0s",
+    "created_at": "2025-08-21T15:28:51.899968Z"
+  },
+  {
+    "student_id": "maría_lópez__2do",
+    "type": "test",
+    "points": 59,
+    "reason": "Test completado (4/5) nivel final 2 en 3m 0s",
+    "created_at": "2025-08-21T15:28:51.925967Z"
+  }
+]

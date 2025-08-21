@@ -1,0 +1,38 @@
+[
+  {
+    "id": "test_q1",
+    "level": 1,
+    "text": "Test question level 1",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "answer_index": 0
+  },
+  {
+    "id": "test_q2",
+    "level": 2,
+    "text": "Test question level 2",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "answer_index": 1
+  },
+  {
+    "id": "test_q3",
+    "level": 3,
+    "text": "Test question level 3",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "answer_index": 2
+  }
+]
